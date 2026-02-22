@@ -93,7 +93,7 @@ case "$HOOK_EVENT" in
         log_event "" "$MESSAGE"
         tmux_alert "$MESSAGE"
         ;;
-    "UserPromptSubmit")
+    "UserPromptSubmit"|"SessionEnd")
         tmux_clear_alert
         ;;
 esac
