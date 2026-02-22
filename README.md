@@ -51,7 +51,8 @@ run-shell ~/.tmux/plugins/tmux-agent-notifications/claude-notifications.tmux
 Install the companion Claude Code plugin to automatically register hooks:
 
 ```bash
-claude plugin add kaiiserni/claude-plugin-tmux-notifications
+claude plugin marketplace add kaiiserni/claude-plugin-tmux-notifications
+claude plugin install tmux-agent-notifications@claude-plugin-tmux-notifications
 ```
 
 ### Option B: Manual hooks
