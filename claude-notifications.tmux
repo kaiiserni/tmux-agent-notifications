@@ -3,9 +3,6 @@
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="$CURRENT_DIR/scripts"
 
-# Store plugin path so scripts can find each other
-tmux set-environment -g TMUX_CLAUDE_NOTIF_SCRIPTS "$SCRIPTS_DIR"
-
 # Create notifications directory
 mkdir -p "$HOME/.claude/.notifications"
 
@@ -32,7 +29,7 @@ tmux set-hook -g pane-focus-in "run-shell '$SCRIPTS_DIR/clear-notification.sh #{
 
 # Keybindings
 tmux bind-key "$key_next" run-shell "$SCRIPTS_DIR/next-notification.sh"
-tmux bind-key "$key_picker" display-popup -w 60% -h 60% -E "$SCRIPTS_DIR/session-picker.sh"
+tmux bind-key "$key_picker" display-popup -w 60% -h 60% -E "$SCRIPTS_DIR/notification-picker.sh"
 [ -n "$key_log" ] && tmux bind-key "$key_log" display-popup -w 80% -h 60% -E "$SCRIPTS_DIR/log-viewer.sh"
 [ -n "$key_toggle" ] && tmux bind-key "$key_toggle" if-shell '[ "$(tmux show -gv status)" = "2" ]' 'set -g status on' 'set -g status 2'
 
