@@ -1,4 +1,4 @@
-# tmux-claude-notifications
+# tmux-agent-notifications
 
 Per-project notifications for Claude Code agents in your tmux status bar. Each agent gets its own notification that only disappears when you focus that specific pane.
 
@@ -27,7 +27,7 @@ Per-project notifications for Claude Code agents in your tmux status bar. Each a
 Add to your `~/.tmux.conf`:
 
 ```tmux
-set -g @plugin 'kaiiserni/tmux-claude-notifications'
+set -g @plugin 'kaiiserni/tmux-agent-notifications'
 ```
 
 Reload tmux: `prefix + I`
@@ -35,13 +35,13 @@ Reload tmux: `prefix + I`
 ### Manual
 
 ```bash
-git clone https://github.com/kaiiserni/tmux-claude-notifications.git ~/.tmux/plugins/tmux-claude-notifications
+git clone https://github.com/kaiiserni/tmux-agent-notifications.git ~/.tmux/plugins/tmux-agent-notifications
 ```
 
 Add to your `~/.tmux.conf`:
 
 ```tmux
-run-shell ~/.tmux/plugins/tmux-claude-notifications/claude-notifications.tmux
+run-shell ~/.tmux/plugins/tmux-agent-notifications/claude-notifications.tmux
 ```
 
 ## Claude Code Setup
@@ -56,7 +56,7 @@ Add the following hooks to your `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/.tmux/plugins/tmux-claude-notifications/scripts/claude-hook.sh Stop"
+            "command": "~/.tmux/plugins/tmux-agent-notifications/scripts/claude-hook.sh Stop"
           }
         ]
       }
@@ -66,7 +66,7 @@ Add the following hooks to your `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/.tmux/plugins/tmux-claude-notifications/scripts/claude-hook.sh Notification"
+            "command": "~/.tmux/plugins/tmux-agent-notifications/scripts/claude-hook.sh Notification"
           }
         ]
       }
@@ -76,7 +76,7 @@ Add the following hooks to your `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/.tmux/plugins/tmux-claude-notifications/scripts/claude-hook.sh UserPromptSubmit"
+            "command": "~/.tmux/plugins/tmux-agent-notifications/scripts/claude-hook.sh UserPromptSubmit"
           }
         ]
       }
