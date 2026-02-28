@@ -105,6 +105,9 @@ case "$HOOK_EVENT" in
         log_event "" "$MESSAGE"
         tmux_alert "$MESSAGE"
         ;;
+    "PreToolUse")
+        is_user_watching && tmux_clear_alert
+        ;;
     "UserPromptSubmit"|"SessionEnd")
         tmux_clear_alert
         ;;
