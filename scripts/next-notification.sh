@@ -2,8 +2,8 @@
 DIR="$HOME/.claude/.notifications"
 [ ! -d "$DIR" ] && exit 0
 
-# Oldest notification first (waiting longest), skip hidden files
-TARGET=$(ls -tr "$DIR" 2>/dev/null | grep -v '^\.' | head -1)
+# Newest notification first (matches status line order), skip hidden files
+TARGET=$(ls -t "$DIR" 2>/dev/null | grep -v '^\.' | head -1)
 [ -z "$TARGET" ] && tmux display-message "No pending agents" && exit 0
 
 # Get the pane that created this notification
