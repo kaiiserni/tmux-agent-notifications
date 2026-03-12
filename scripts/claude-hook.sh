@@ -1,30 +1,22 @@
 #!/usr/bin/env bash
 
 HOOK_EVENT="$1"
-LOG_FILE="$HOME/.claude/notifications.log"
-TIMESTAMP=$(date '+%H:%M:%S')
 
-# Read JSON from stdin
 if [ ! -t 0 ]; then
     JSON_DATA=$(cat)
 fi
 
-# Extract project name
+CWD=""
 if [ -n "$JSON_DATA" ]; then
     CWD=$(echo "$JSON_DATA" | grep -o '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*: *"\([^"]*\)".*/\1/')
-    PROJECT_NAME=$(basename "${CWD:-unknown}")
-    PARENT_DIR=$(basename "$(dirname "$CWD")" 2>/dev/null)
-    if [[ "$PARENT_DIR" == *.git ]]; then
-        DISPLAY_NAME="${PARENT_DIR%.git}/$PROJECT_NAME"
-    else
-        DISPLAY_NAME="$PROJECT_NAME"
-    fi
-else
-    PROJECT_NAME="unknown"
-    DISPLAY_NAME="unknown"
 fi
 
-# Extract Claude session title from tmux pane_title (format: "✳ Session Name")
+NOTIFY_SOURCE="Claude"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/tmux-notify-lib.sh"
+
+DISPLAY_NAME=$(resolve_project_name "$CWD")
+
 SESSION_TITLE=$(tmux display-message -t "$TMUX_PANE" -p '#{pane_title}' 2>/dev/null | sed 's/^[^a-zA-Z0-9]* *//')
 [[ "$SESSION_TITLE" == "Claude Code" ]] && SESSION_TITLE=""
 
@@ -32,84 +24,23 @@ parse_json() {
     echo "$JSON_DATA" | grep -o "\"$1\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | sed 's/.*: *"\([^"]*\)".*/\1/'
 }
 
-NOTIF_DIR="$HOME/.claude/.notifications"
-mkdir -p "$NOTIF_DIR"
-PANE_SAFE="${TMUX_PANE//%/}"
-NOTIF_KEY="${PROJECT_NAME}__${PANE_SAFE}"
-
-get_option() {
-    tmux show-option -gqv "$1" 2>/dev/null
-}
-
-NOTIF_FG=$(get_option "@claude-notif-fg")
-NOTIF_FG="${NOTIF_FG:-#c8d3f5}"
-ALERT_FG=$(get_option "@claude-notif-alert-fg")
-ALERT_FG="${ALERT_FG:-yellow}"
-ALERT_STYLE=$(get_option "@claude-notif-alert-style")
-ALERT_STYLE="${ALERT_STYLE:-bold}"
-
-is_user_watching() {
-    local now=$(date +%s)
-    while IFS=$'\t' read -r flags activity pane_id; do
-        [ "$pane_id" != "$TMUX_PANE" ] && continue
-        [[ "$flags" != *focused* ]] && continue
-        [ $((now - activity)) -lt 2 ] && return 0
-    done < <(tmux list-clients -F '#{client_flags}	#{client_activity}	#{pane_id}' 2>/dev/null)
-    return 1
-}
-
-refresh_all_clients() {
-    tmux list-clients -F '#{client_name}' 2>/dev/null | while read -r c; do
-        tmux refresh-client -S -t "$c" 2>/dev/null
-    done
-}
-
-tmux_alert() {
-    local msg="$1"
-    local label="$DISPLAY_NAME"
-    [ -n "$SESSION_TITLE" ] && label="$DISPLAY_NAME ($SESSION_TITLE)"
-
-    if is_user_watching; then
-        return 0
-    fi
-
-    echo "#[fg=${NOTIF_FG}][$TIMESTAMP] $label: #[fg=${ALERT_FG},${ALERT_STYLE}]$msg #[default]" > "$NOTIF_DIR/$NOTIF_KEY"
-    echo "${TMUX_PANE}" > "$NOTIF_DIR/.pane_$NOTIF_KEY"
-    refresh_all_clients
-}
-
-log_event() {
-    local icon="$1"
-    local msg="$2"
-    local label="$DISPLAY_NAME"
-    if [ -n "$SESSION_TITLE" ]; then
-        label="$DISPLAY_NAME ($SESSION_TITLE)"
-    fi
-    echo "[$TIMESTAMP] $icon $label: $msg" >> "$LOG_FILE"
-}
-
-tmux_clear_alert() {
-    rm -f "$NOTIF_DIR/$NOTIF_KEY" "$NOTIF_DIR/.pane_$NOTIF_KEY"
-    refresh_all_clients
-}
-
 case "$HOOK_EVENT" in
     "Stop")
-        log_event "done" "Agent has finished"
-        tmux_alert "Agent has finished"
+        log_event "done" "Agent has finished" "$DISPLAY_NAME" "$SESSION_TITLE"
+        tmux_alert "Agent has finished" "$DISPLAY_NAME" "$SESSION_TITLE"
         ;;
     "Notification")
         MESSAGE=$(parse_json "message")
         MESSAGE=${MESSAGE:-"Needs attention"}
         MESSAGE=${MESSAGE//Claude/Agent}
-        log_event "" "$MESSAGE"
-        tmux_alert "$MESSAGE"
+        log_event "" "$MESSAGE" "$DISPLAY_NAME" "$SESSION_TITLE"
+        tmux_alert "$MESSAGE" "$DISPLAY_NAME" "$SESSION_TITLE"
         ;;
     "PreToolUse")
-        is_user_watching && tmux_clear_alert
+        is_user_watching && tmux_clear_alert "$DISPLAY_NAME"
         ;;
     "UserPromptSubmit"|"SessionEnd")
-        tmux_clear_alert
+        tmux_clear_alert "$DISPLAY_NAME"
         ;;
 esac
 
