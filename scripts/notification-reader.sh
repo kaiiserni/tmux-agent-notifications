@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-DIR="$HOME/.claude/.notifications"
+DIR="$HOME/.tmux-notifications"
 [ ! -d "$DIR" ] && exit 0
 
-FILES=$(ls -t "$DIR" 2>/dev/null | grep -v '^\.')
+FILES=$(ls -t "$DIR" 2>/dev/null | grep -v '^\.' | grep -v '^events\.log$')
 [ -z "$FILES" ] && exit 0
 
 TOTAL=$(echo "$FILES" | wc -l | tr -d ' ')
@@ -12,7 +12,6 @@ WIDTH="${WIDTH:-200}"
 SEP_FG=$(tmux show-option -gqv "@claude-notif-separator-fg" 2>/dev/null)
 SEP_FG="${SEP_FG:-#444a73}"
 
-# Strip tmux formatting to get visible text length
 visible_len() {
     echo -n "$1" | sed 's/#\[[^]]*\]//g' | wc -c | tr -d ' '
 }
